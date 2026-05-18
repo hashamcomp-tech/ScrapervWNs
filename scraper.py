@@ -56,7 +56,6 @@ def scrape_novel(novel_url):
 
     chapters = []
     spine = ['nav']
-
     os.makedirs('output', exist_ok=True)
 
     for i in range(1, total + 1):
@@ -66,18 +65,12 @@ def scrape_novel(novel_url):
             title, content = scrape_chapter(url)
             if not content:
                 continue
-
-            c = epub.EpubHtml(
-                title=title,
-                file_name=f'chapter_{i}.xhtml',
-                lang='en'
-            )
+            c = epub.EpubHtml(title=title, file_name=f'chapter_{i}.xhtml', lang='en')
             html_content = f'<h1>{title}</h1>'
             for para in content.split('\n\n'):
                 if para.strip():
                     html_content += f'<p>{para.strip()}</p>'
             c.content = html_content
-
             book.add_item(c)
             chapters.append(c)
             spine.append(c)
