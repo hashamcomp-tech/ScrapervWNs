@@ -3,7 +3,6 @@ from bs4 import BeautifulSoup
 import time
 import os
 import re
-from epub_conversion.utils import open_book, read_book, convert_book
 from ebooklib import epub
 
 HEADERS = {
