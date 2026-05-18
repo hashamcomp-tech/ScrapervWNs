@@ -31,21 +31,18 @@ def get_total_chapters(novel_url):
     return None
 
 def scrape_chapter(url):
-    """Scrape text content from a single chapter."""
     res = requests.get(url, headers=HEADERS)
     soup = BeautifulSoup(res.text, 'html.parser')
     
-    # Get chapter title
-    title = soup.select_one('h1, .chapter-title, .entry-title, h2')
+    title = soup.select_one('h2, h1')
     title_text = title.get_text(strip=True) if title else url.split('/')[-1]
     
-    # Get chapter content
-    content_div = soup.select_one('.chapter-content, #chapter-content, .text-left, .reading-content')
+    # This site puts content in div.txt
+    content_div = soup.select_one('div.txt')
     if not content_div:
         return title_text, '[Content not found]'
     
-    # Remove unwanted tags
-    for tag in content_div.select('script, style, .ads, .comment, ins, iframe, noscript'):
+    for tag in content_div.select('script, style, ins, iframe'):
         tag.decompose()
     
     text = content_div.get_text(separator='\n')
