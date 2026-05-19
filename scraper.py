@@ -34,13 +34,18 @@ def scrape_chapter(args):
         res = requests.get(url, headers=HEADERS)
         time.sleep(0.5)
         soup = BeautifulSoup(res.text, 'html.parser')
+        
         title = soup.select_one('h2')
         title_text = title.get_text(strip=True) if title else f'Chapter {i}'
+        
         content_div = soup.select_one('div.txt')
         if not content_div:
             return i, title_text, ''
-        for tag in content_div.select('script, style, ins, iframe'):
+        
+        # Remove unwanted tags
+        for tag in content_div.select('script, style, ins, iframe, h1, h2, h3'):
             tag.decompose()
+        
         text = content_div.get_text(separator='\n')
         return i, title_text, clean_text(text)
     except Exception as e:
