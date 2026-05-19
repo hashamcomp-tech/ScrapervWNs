@@ -14,10 +14,14 @@ HEADERS = {
 
 CHAPTERS_PER_VOLUME = 500
 
+def normalize(text):
+    return unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('ascii').lower()
+
 def clean_text(text):
     lines = [line.strip() for line in text.splitlines()]
-    lines = [l for l in lines if 'freewebnovel' not in l.lower()]
-    lines = [l for l in lines if 'webnovel' not in l.lower()]
+    lines = [l for l in lines if 'freewebnovel' not in normalize(l)]
+    lines = [l for l in lines if 'webnovel' not in normalize(l)]
+    lines = [l for l in lines if not (len(l) < 30 and '.com' in normalize(l))]
     merged = []
     for line in lines:
         if not line:
