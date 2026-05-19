@@ -32,6 +32,7 @@ def scrape_chapter(args):
     i, url = args
     try:
         res = requests.get(url, headers=HEADERS)
+        time.sleep(0.5)
         soup = BeautifulSoup(res.text, 'html.parser')
         title = soup.select_one('h2')
         title_text = title.get_text(strip=True) if title else f'Chapter {i}'
@@ -63,7 +64,7 @@ def scrape_novel(novel_url):
     tasks = [(i, f"{novel_url}/chapter-{i}") for i in range(1, total + 1)]
     results = {}
 
-    with ThreadPoolExecutor(max_workers=5) as executor:
+    with ThreadPoolExecutor(max_workers=2) as executor:
         futures = {executor.submit(scrape_chapter, task): task for task in tasks}
         for future in as_completed(futures):
             i, title, content = future.result()
