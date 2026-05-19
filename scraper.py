@@ -15,6 +15,9 @@ HEADERS = {
 def clean_text(text):
     lines = [line.strip() for line in text.splitlines()]
     lines = [l for l in lines if l]
+    # Remove watermarks
+    lines = [l for l in lines if 'freewebnovel' not in l.lower()]
+    lines = [l for l in lines if 'webnovel' not in l.lower()]
     return '\n\n'.join(lines)
 
 def get_total_chapters(novel_url):
