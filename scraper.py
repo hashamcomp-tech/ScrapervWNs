@@ -23,7 +23,7 @@ def clean_text(text):
         if not line:
             merged.append('')
             continue
-        if merged and merged[-1] and not merged[-1].endswith(('.', '!', '?', ':', '"', "'")):
+        if merged and merged[-1] and not merged[-1].endswith(('.', '!', '?', ':', '"', "'")) and line[0].islower():
             merged[-1] += ' ' + line
         else:
             merged.append(line)
@@ -112,7 +112,7 @@ def scrape_novel(novel_url):
         print(f"\nVolume {vol_num}: chapters {start}-{end}")
         tasks = [(i, f"{novel_url}/chapter-{i}") for i in range(start, end + 1)]
         results = {}
-        with ThreadPoolExecutor(max_workers=2) as executor:
+        with ThreadPoolExecutor(max_workers=3) as executor:
             futures = {executor.submit(scrape_chapter, task): task for task in tasks}
             for future in as_completed(futures):
                 i, title, content = future.result()
