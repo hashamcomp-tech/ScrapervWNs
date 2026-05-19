@@ -4,6 +4,7 @@ import time
 import os
 import re
 from ebooklib import epub
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15',
@@ -27,18 +28,23 @@ def get_total_chapters(novel_url):
             return int(match.group(1))
     return None
 
-def scrape_chapter(url):
-    res = requests.get(url, headers=HEADERS)
-    soup = BeautifulSoup(res.text, 'html.parser')
-    title = soup.select_one('h2')
-    title_text = title.get_text(strip=True) if title else url.split('/')[-1]
-    content_div = soup.select_one('div.txt')
-    if not content_div:
-        return title_text, ''
-    for tag in content_div.select('script, style, ins, iframe'):
-        tag.decompose()
-    text = content_div.get_text(separator='\n')
-    return title_text, clean_text(text)
+def scrape_chapter(args):
+    i, url = args
+    try:
+        res = requests.get(url, headers=HEADERS)
+        soup = BeautifulSoup(res.text, 'html.parser')
+        title = soup.select_one('h2')
+        title_text = title.get_text(strip=True) if title else f'Chapter {i}'
+        content_div = soup.select_one('div.txt')
+        if not content_div:
+            return i, title_text, ''
+        for tag in content_div.select('script, style, ins, iframe'):
+            tag.decompose()
+        text = content_div.get_text(separator='\n')
+        return i, title_text, clean_text(text)
+    except Exception as e:
+        print(f"  Error on chapter {i}: {e}")
+        return i, f'Chapter {i}', ''
 
 def scrape_novel(novel_url):
     slug = novel_url.rstrip('/').split('/')[-1]
@@ -54,30 +60,33 @@ def scrape_novel(novel_url):
     book.set_title(novel_name)
     book.set_language('en')
 
+    tasks = [(i, f"{novel_url}/chapter-{i}") for i in range(1, total + 1)]
+    results = {}
+
+    with ThreadPoolExecutor(max_workers=5) as executor:
+        futures = {executor.submit(scrape_chapter, task): task for task in tasks}
+        for future in as_completed(futures):
+            i, title, content = future.result()
+            results[i] = (title, content)
+            print(f"Done {i}/{total}")
+
+    os.makedirs('output', exist_ok=True)
     chapters = []
     spine = ['nav']
-    os.makedirs('output', exist_ok=True)
 
     for i in range(1, total + 1):
-        url = f"{novel_url}/chapter-{i}"
-        print(f"Chapter {i}/{total}: {url}")
-        try:
-            title, content = scrape_chapter(url)
-            if not content:
-                continue
-            c = epub.EpubHtml(title=title, file_name=f'chapter_{i}.xhtml', lang='en')
-            html_content = f'<h1>{title}</h1>'
-            for para in content.split('\n\n'):
-                if para.strip():
-                    html_content += f'<p>{para.strip()}</p>'
-            c.content = html_content
-            book.add_item(c)
-            chapters.append(c)
-            spine.append(c)
-            time.sleep(0.3)
-        except Exception as e:
-            print(f"  Error: {e}")
+        title, content = results.get(i, (f'Chapter {i}', ''))
+        if not content:
             continue
+        c = epub.EpubHtml(title=title, file_name=f'chapter_{i}.xhtml', lang='en')
+        html_content = f'<h1>{title}</h1>\n'
+        for para in content.split('\n\n'):
+            if para.strip():
+                html_content += f'<p>{para.strip()}</p>\n'
+        c.content = html_content
+        book.add_item(c)
+        chapters.append(c)
+        spine.append(c)
 
     book.toc = chapters
     book.add_item(epub.EpubNcx())
