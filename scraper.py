@@ -132,7 +132,7 @@ def scrape_novel(novel_url):
     print(f"\nAll volumes saved to output/")
 
 NOVELS = [
-    "https://freewebnovel.com/novel/mother-of-learning",
+    "https://freewebnovel.com/novel/reverend-insanity",
 ]
 
 if __name__ == "__main__":
