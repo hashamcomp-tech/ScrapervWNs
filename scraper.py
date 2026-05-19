@@ -14,22 +14,36 @@ HEADERS = {
 
 def clean_text(text):
     lines = [line.strip() for line in text.splitlines()]
-    lines = [l for l in lines if l]
+    
     # Remove watermarks
     lines = [l for l in lines if 'freewebnovel' not in l.lower()]
     lines = [l for l in lines if 'webnovel' not in l.lower()]
-    return '\n\n'.join(lines)
-
-def get_total_chapters(novel_url):
-    res = requests.get(novel_url, headers=HEADERS)
-    soup = BeautifulSoup(res.text, 'html.parser')
-    meta = soup.find('meta', property='og:novel:lastest_chapter_url')
-    if meta:
-        url = meta.get('content', '')
-        match = re.search(r'chapter-(\d+)', url)
-        if match:
-            return int(match.group(1))
-    return None
+    
+    # Rejoin broken lines - if a line doesn't end with punctuation
+    # it's probably a continuation of the previous line
+    merged = []
+    for line in lines:
+        if not line:
+            merged.append('')  # preserve paragraph breaks
+            continue
+        if merged and merged[-1] and not merged[-1].endswith(('.', '!', '?', ':', '"', "'")):
+            merged[-1] += ' ' + line
+        else:
+            merged.append(line)
+    
+    # Remove multiple blank lines, keep single paragraph breaks
+    result = []
+    prev_blank = False
+    for line in merged:
+        if not line:
+            if not prev_blank:
+                result.append('')
+            prev_blank = True
+        else:
+            result.append(line)
+            prev_blank = False
+    
+    return '\n\n'.join([l for l in result if l])
 
 def scrape_chapter(args):
     i, url = args
