@@ -89,7 +89,7 @@ def scrape_novel(novel_url):
     print(f"\nDone! Saved to: {filepath}")
 
 NOVELS = [
-    "https://freewebnovel.com/novel/shadow-slave",
+    "https://freewebnovel.com/novel/mother-of-learning",
 ]
 
 if __name__ == "__main__":
