@@ -30,7 +30,7 @@ def get_total_chapters(novel_url):
 def scrape_chapter(url):
     res = requests.get(url, headers=HEADERS)
     soup = BeautifulSoup(res.text, 'html.parser')
-    title = soup.select_one('h2, h1')
+    title = soup.select_one('h2')
     title_text = title.get_text(strip=True) if title else url.split('/')[-1]
     content_div = soup.select_one('div.txt')
     if not content_div:
@@ -81,7 +81,6 @@ def scrape_novel(novel_url):
 
     book.toc = chapters
     book.add_item(epub.EpubNcx())
-    book.add_item(epub.EpubNav())
     book.spine = spine
 
     filepath = os.path.join('output', f"{slug}.epub")
