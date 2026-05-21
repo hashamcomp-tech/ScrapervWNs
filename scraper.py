@@ -13,7 +13,7 @@ HEADERS = {
     'Accept-Language': 'en-US,en;q=0.9',
 }
 
-CHAPTERS_PER_VOLUME = 500
+CHAPTERS_PER_VOLUME = 5000
 
 def normalize(text):
     return unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('ascii').lower()
