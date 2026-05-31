@@ -117,7 +117,7 @@ def scrape_novel(novel_url):
         print(f"\nVolume {vol_num}: chapters {start}-{end}")
         tasks = [(i, f"{novel_url}/chapter-{i}") for i in range(start, end + 1)]
         results = {}
-        with ThreadPoolExecutor(max_workers=30) as executor:
+        with ThreadPoolExecutor(max_workers=15) as executor:
             futures = {executor.submit(scrape_chapter, task): task for task in tasks}
             for future in as_completed(futures):
                 i, title, content = future.result()
