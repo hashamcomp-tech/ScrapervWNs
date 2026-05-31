@@ -4,6 +4,7 @@ import unicodedata
 import time
 import os
 import re
+import html as html_lib
 from ebooklib import epub
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -80,25 +81,33 @@ def make_epub(slug, novel_name, chapters_data, vol_num, start_ch, end_ch):
     book.set_language('en')
     chapters = []
     spine = ['nav']
+
     for i, title, content in chapters_data:
         if not content:
             continue
         c = epub.EpubHtml(title=title, file_name=f'chapter_{i}.xhtml', lang='en')
-        html_content = f'<h1>{title}</h1>\n'
+        html_content = f'<h1>{html_lib.escape(title)}</h1>\n'
         for para in content.split('\n\n'):
             if para.strip():
-                html_content += f'<p>{para.strip()}</p>\n'
+                html_content += f'<p>{html_lib.escape(para.strip())}</p>\n'
         c.content = html_content
         book.add_item(c)
         chapters.append(c)
         spine.append(c)
-    book.toc = chapters
+
+    book.toc = tuple(chapters)
     book.add_item(epub.EpubNcx())
+    book.add_item(epub.EpubNav())
     book.spine = spine
+
     os.makedirs('output', exist_ok=True)
     filepath = os.path.join('output', f"{slug}-vol{vol_num}-ch{start_ch}-{end_ch}.epub")
-    epub.write_epub(filepath, book)
-    print(f"Saved: {filepath}")
+
+    try:
+        epub.write_epub(filepath, book)
+        print(f"Saved: {filepath}")
+    except Exception as e:
+        print(f"Failed to write epub: {e}")
 
 def scrape_novel(novel_url):
     slug = novel_url.rstrip('/').split('/')[-1]
