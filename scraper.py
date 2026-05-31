@@ -60,7 +60,7 @@ def scrape_chapter(args):
     i, url = args
     try:
         res = requests.get(url, headers=HEADERS)
-        time.sleep(3)
+        time.sleep(2)
         soup = BeautifulSoup(res.text, 'html.parser')
         title = soup.select_one('h2')
         title_text = title.get_text(strip=True) if title else f'Chapter {i}'
